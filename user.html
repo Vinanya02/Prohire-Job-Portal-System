@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProHire | User Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root { --primary: #1a5f7a; --accent: #3498db; --glass: rgba(255, 255, 255, 0.95); --bg-bottom: #f4f7f9; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; }
+        
+        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; display: flex; flex-direction: column; }
+        .bg-top { height: 80%; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=2070'); background-size: cover; }
+        .bg-bottom { height: 20%; background-color: var(--bg-bottom); }
+
+        .wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .profile-dashboard { width: 95%; max-width: 850px; background: var(--glass); backdrop-filter: blur(15px); border-radius: 24px; padding: 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+        
+        .back-nav { display: block; margin-bottom: 25px; text-decoration: none; color: var(--primary); font-weight: 600; }
+        .profile-header { display: flex; align-items: center; gap: 25px; margin-bottom: 35px; }
+        .photo-circle { width: 110px; height: 110px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; cursor: pointer; border: 4px solid white; overflow: hidden; text-transform: uppercase; }
+        .photo-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+        .details-container { background: white; border-radius: 18px; border: 1px solid #ddd; padding: 35px; }
+        .line-item { border-bottom: 2px solid var(--primary); margin-bottom: 25px; padding-bottom: 10px; }
+        .line-item label { display: block; font-size: 0.75rem; color: var(--accent); font-weight: 700; margin-bottom: 5px; }
+        .line-item input { width: 100%; border: none; outline: none; font-size: 1.1rem; background: transparent; }
+
+        .resume-area { margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 12px; border: 1px dashed var(--primary); }
+        .resume-status { display: flex; align-items: center; gap: 15px; }
+        .btn-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        
+        .edit-button { background: var(--primary); color: white; padding: 12px 30px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .download-button { background: var(--accent); color: white; padding: 12px 30px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="bg-layer"><div class="bg-top"></div><div class="bg-bottom"></div></div>
+    <div class="wrapper">
+        <div class="profile-dashboard">
+            <a href="job.html" class="back-nav">← Back to Dashboard</a>
+            <div class="profile-header">
+                <div class="photo-circle" onclick="document.getElementById('imgIn').click()">
+                    <img id="preview" style="display:none;">
+                    <span id="label">U</span>
+                </div>
+                <input type="file" id="imgIn" hidden accept="image/*" onchange="handlePhoto(event)">
+                <div><h2 id="dispName">User Name</h2><p id="dispTitle">Professional Title</p></div>
+            </div>
+
+            <div class="details-container">
+                <div class="line-item"><label>FULL NAME</label><input type="text" id="fieldName" value="User Name" readonly></div>
+                <div class="line-item"><label>KEY SKILLS</label><input type="text" id="fieldSkills" value="React, UI Design, Python" readonly></div>
+                <div class="line-item"><label>EXPERIENCE</label><input type="text" id="fieldExp" value="5 Years in Tech" readonly></div>
+                <div class="line-item"><label>EDUCATION</label><input type="text" id="fieldEdu" value="Bachelor of Computer Science" readonly></div>
+                <div class="line-item"><label>LANGUAGES</label><input type="text" id="fieldLang" value="English, Spanish" readonly></div>
+                
+                <div class="resume-area">
+                    <label style="font-size: 0.7rem; color: var(--accent); font-weight: 700;">RESUME STATUS</label>
+                    <div class="resume-status">
+                        <span style="font-size: 2rem;">📄</span>
+                        <div style="flex-grow: 1;">
+                            <strong id="resFileName">No resume uploaded.</strong><br>
+                            <small id="resDate">Upload PDF or use Resume Builder</small>
+                        </div>
+                        <button class="edit-button" style="padding: 8px 15px; font-size: 0.8rem;" onclick="document.getElementById('resIn').click()">Upload PDF</button>
+                        <input type="file" id="resIn" hidden accept=".pdf" onchange="handleResume(event)">
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="download-button" onclick="downloadResume()">Download PDF</button>
+                    <button class="edit-button" id="editBtn" onclick="toggleEdit()">Edit Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const registeredName = localStorage.getItem('userName') || "Guest User";
+            syncUserInfo(registeredName);
+
+            const savedResume = localStorage.getItem('attachedResume');
+            if(savedResume) {
+                const data = JSON.parse(savedResume);
+                document.getElementById('resFileName').innerText = data.fileName;
+                document.getElementById('resDate').innerText = "Generated: " + data.date;
+                
+                // Sync detailed info from Builder
+                document.getElementById('dispName').innerText = data.name;
+                document.getElementById('fieldName').value = data.name;
+                document.getElementById('dispTitle').innerText = data.title || "Software Professional";
+                document.getElementById('fieldSkills').value = data.skills;
+                document.getElementById('fieldExp').value = data.experience;
+                document.getElementById('fieldEdu').value = data.edu || "Bachelor's Degree";
+                
+                document.getElementById('label').innerText = data.name.charAt(0).toUpperCase();
+            }
+        }
+
+        function syncUserInfo(name) {
+            document.getElementById('dispName').innerText = name;
+            document.getElementById('fieldName').value = name;
+            document.getElementById('label').innerText = name.charAt(0).toUpperCase();
+        }
+
+        async function downloadResume() {
+            const savedResume = localStorage.getItem('attachedResume');
+            if (savedResume) {
+                const data = JSON.parse(savedResume);
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Professional PDF Layout based on Builder Data
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(26);
+                doc.setTextColor(26, 95, 122); 
+                doc.text(data.name.toUpperCase(), 105, 25, { align: "center" });
+
+                doc.setFontSize(14);
+                doc.setTextColor(52, 152, 219);
+                doc.text(data.title || "Professional Profile", 105, 33, { align: "center" });
+
+                doc.setDrawColor(200, 200, 200); 
+                doc.line(20, 38, 190, 38);
+
+                // Experience Section
+                doc.setFontSize(16);
+                doc.setTextColor(26, 95, 122);
+                doc.text("WORK EXPERIENCE", 20, 50);
+                
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text(data.experience || "N/A", 25, 60);
+                
+                if(data.description) {
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(11);
+                    const splitDesc = doc.splitTextToSize(data.description, 160);
+                    doc.text(splitDesc, 25, 68);
+                }
+
+                // Education Section
+                let eduY = 100;
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(16);
+                doc.setTextColor(26, 95, 122);
+                doc.text("EDUCATION", 20, eduY);
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text(data.edu || "N/A", 25, eduY + 10);
+
+                // Skills Section
+                let skillsY = 135;
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(16);
+                doc.setTextColor(26, 95, 122);
+                doc.text("TECHNICAL SKILLS", 20, skillsY);
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                const splitSkills = doc.splitTextToSize(data.skills || "N/A", 160);
+                doc.text(splitSkills, 25, skillsY + 10);
+
+                doc.setFontSize(9);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Generated via ProHire Job Portal on ${data.date}`, 105, 285, { align: "center" });
+
+                const finalFileName = data.fileName.toLowerCase().endsWith('.pdf') ? data.fileName : data.fileName + ".pdf";
+                doc.save(finalFileName);
+            } else {
+                alert("No builder data found! Please create a resume in the Builder first.");
+            }
+        }
+
+        function handlePhoto(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('preview').src = reader.result;
+                document.getElementById('preview').style.display = 'block';
+                document.getElementById('label').style.display = 'none';
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+
+        function handleResume(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('resFileName').innerText = file.name;
+                document.getElementById('resDate').innerText = "Status: Verified locally";
+                
+                const resumeData = {
+                    fileName: file.name,
+                    date: new Date().toLocaleDateString(),
+                    name: document.getElementById('fieldName').value,
+                    skills: document.getElementById('fieldSkills').value
+                };
+                localStorage.setItem('attachedResume', JSON.stringify(resumeData));
+            }
+        }
+
+        let isEdit = false;
+        function toggleEdit() {
+            isEdit = !isEdit;
+            const inputs = document.querySelectorAll('.line-item input');
+            inputs.forEach(i => {
+                i.readOnly = !isEdit;
+                i.style.background = isEdit ? "rgba(52, 152, 219, 0.05)" : "transparent";
+            });
+            document.getElementById('editBtn').innerText = isEdit ? "Save Profile" : "Edit Details";
+            
+            if(!isEdit) {
+                const newName = document.getElementById('fieldName').value;
+                localStorage.setItem('userName', newName);
+                syncUserInfo(newName);
+                alert("Profile changes synchronized!");
+            }
+        }
+    </script>
+</body>
+</html>

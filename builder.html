@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProHire | Resume Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1a5f7a; --accent: #3498db; --glass: rgba(255, 255, 255, 0.95); --bg-bottom: #f4f7f9; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; }
+        
+        /* Matching the professional Job Portal background style */
+        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; display: flex; flex-direction: column; }
+        .bg-top { height: 80%; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=2070'); background-size: cover; }
+        .bg-bottom { height: 20%; background-color: var(--bg-bottom); }
+
+        .wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .builder-card { width: 95%; max-width: 900px; background: var(--glass); backdrop-filter: blur(15px); border-radius: 24px; padding: 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+        
+        .form-container { background: white; border-radius: 18px; border: 1px solid #ddd; padding: 35px; max-height: 70vh; overflow-y: auto; }
+        .section-title { color: var(--primary); border-bottom: 2px solid var(--primary); margin: 20px 0 15px; padding-bottom: 5px; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 0.75rem; color: var(--accent); font-weight: 700; margin-bottom: 5px; }
+        .input-group input, .input-group textarea { width: 100%; padding: 10px; border: 1px solid #eee; border-radius: 8px; font-family: inherit; box-sizing: border-box; }
+        
+        .btn-row { display: flex; justify-content: space-between; margin-top: 30px; }
+        .action-btn { background: var(--primary); color: white; padding: 12px 30px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .action-btn:hover { background: var(--accent); transform: translateY(-2px); }
+        .secondary-btn { background: #eee; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="bg-layer"><div class="bg-top"></div><div class="bg-bottom"></div></div>
+    <div class="wrapper">
+        <div class="builder-card">
+            <h2 style="margin-top:0; color: var(--primary);">Resume Builder</h2>
+            <p style="color: #666; margin-bottom: 25px;">Fill in your details to generate and attach your resume to your professional profile.</p>
+            
+            <div class="form-container" id="resumeForm">
+                <div class="section-title">Personal Information</div>
+                <div class="input-group"><label>Full Name</label><input type="text" id="resName" placeholder="e.g. John Smith"></div>
+                <div class="input-group"><label>Professional Title</label><input type="text" id="resTitle" placeholder="e.g. Senior Frontend Developer"></div>
+                
+                <div class="section-title">Experience</div>
+                <div class="input-group"><label>Company & Role</label><input type="text" id="resExp" placeholder="e.g. TechCorp | Software Engineer"></div>
+                <div class="input-group"><label>Key Responsibilities</label><textarea id="resDesc" rows="3" placeholder="Describe your achievements and daily tasks..."></textarea></div>
+                
+                <div class="section-title">Education & Skills</div>
+                <div class="input-group"><label>University / Degree</label><input type="text" id="resEdu" placeholder="e.g. Stanford University | BS Computer Science"></div>
+                <div class="input-group"><label>Technical Skills</label><input type="text" id="resSkills" placeholder="e.g. JavaScript, Python, AWS, UI Design"></div>
+            </div>
+
+            <div class="btn-row">
+                <button class="action-btn secondary-btn" onclick="location.href='job.html'">Cancel</button>
+                <button class="action-btn" onclick="saveAndAttach()">Generate & Attach to Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function saveAndAttach() {
+            // Collecting form data into a structured object
+            const resumeData = {
+                name: document.getElementById('resName').value.trim(),
+                title: document.getElementById('resTitle').value.trim(),
+                experience: document.getElementById('resExp').value.trim(),
+                description: document.getElementById('resDesc').value.trim(),
+                edu: document.getElementById('resEdu').value.trim(),
+                skills: document.getElementById('resSkills').value.trim(),
+                // Metadata for the profile display
+                fileName: "ProHire_Resume_" + Date.now() + ".pdf",
+                date: new Date().toLocaleDateString()
+            };
+
+            // Basic validation
+            if (!resumeData.name || !resumeData.title) { 
+                alert("Please fill in your Name and Professional Title at a minimum."); 
+                return; 
+            }
+
+            // Save the data to LocalStorage so 'user.html' can retrieve it
+            localStorage.setItem('attachedResume', JSON.stringify(resumeData));
+            
+            // Log to console for debugging (Ctrl+Shift+I in browser)
+            console.log("Resume Data saved to storage:", resumeData);
+
+            alert("Resume details generated and attached successfully! Redirecting to your profile...");
+            
+            // Redirect to the profile page to see the new data
+            window.location.href = 'user.html'; 
+        }
+
+        // Auto-fill the name if they already registered it
+        window.onload = function() {
+            const registeredName = localStorage.getItem('userName');
+            if(registeredName) {
+                document.getElementById('resName').value = registeredName;
+            }
+        };
+    </script>
+</body>
+</html>

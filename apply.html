@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ProHire | Your Applications</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1a5f7a; --glass: rgba(255, 255, 255, 0.95); --bg-bottom: #f4f7f9; }
+        body, html { margin: 0; min-height: 100%; font-family: 'Inter', sans-serif; }
+        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; display: flex; flex-direction: column; }
+        .bg-top { height: 80%; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=2070'); background-size: cover; }
+        .bg-bottom { height: 20%; background-color: var(--bg-bottom); }
+        .wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .applied-card { width: 95%; max-width: 900px; background: var(--glass); border-radius: 24px; padding: 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+        .job-entry { background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .status { color: #27ae60; font-weight: 600; font-size: 0.8rem; background: #e8f5e9; padding: 5px 12px; border-radius: 20px; }
+        .back { text-decoration: none; color: var(--primary); font-weight: 600; display: block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="bg-layer"><div class="bg-top"></div><div class="bg-bottom"></div></div>
+    <div class="wrapper">
+        <div class="applied-card">
+            <a href="job.html" class="back">← Back to Dashboard</a>
+            <h2 style="color: var(--primary);">Your Applications</h2>
+            <div id="appliedList"></div>
+        </div>
+    </div>
+    <script>
+        const applications = JSON.parse(localStorage.getItem('myApplications')) || [];
+        const container = document.getElementById('appliedList');
+        
+        if(applications.length === 0) {
+            container.innerHTML = "<p style='color:#999; text-align:center;'>No applications yet. Go apply for some jobs!</p>";
+        } else {
+            // ERROR FIXED: Reverse logic was duplicating entries in some loops; now handled cleanly
+            const displayApps = [...applications].reverse();
+            displayApps.forEach(app => {
+                container.innerHTML += `
+                    <div class="job-entry">
+                        <div>
+                            <strong style="font-size:1.1rem">${app.title}</strong><br>
+                            <span style="color:#666">${app.company} • Applied on ${app.date}</span>
+                        </div>
+                        <span class="status">Submitted</span>
+                    </div>`;
+            });
+        }
+    </script>
+</body>
+</html>

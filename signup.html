@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProHire - Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-blue: #00d2ff;
+            --primary-blue: #1a73e8;
+            --text-light: #fdfdfd;
+            --bg-color: #050a14;
+            --form-bg-glass: rgba(10, 25, 47, 0.65);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --input-placeholder: #8892b0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; background-color: var(--bg-color);
+            margin: 0; color: var(--text-light); overflow: hidden;
+        }
+
+        .bg-video {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: -2; opacity: 0.6;
+        }
+
+        .video-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(26, 115, 232, 0.1) 0%, rgba(5, 10, 20, 0.8) 100%);
+            z-index: -1; backdrop-filter: blur(8px);
+        }
+
+        .signup-container {
+            background-color: var(--form-bg-glass); backdrop-filter: blur(20px);
+            padding: 40px; border-radius: 24px; border: 1px solid var(--border-glass);
+            text-align: center; width: 100%; max-width: 420px; z-index: 1;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 { color: var(--accent-blue); margin-bottom: 25px; font-size: 2.2rem; text-shadow: 0 0 15px rgba(0, 210, 255, 0.3); }
+
+        .form-content { transition: all 0.5s ease-in-out; }
+        .form-content.slide-out { transform: scale(0.95) translateY(20px); opacity: 0; }
+
+        .input-group.stack-mode { display: flex; flex-direction: column; gap: 15px; }
+        
+        input {
+            width: 100%; padding: 14px 15px; border-radius: 12px;
+            border: 1px solid var(--border-glass); background: var(--input-bg);
+            color: white; outline: none; box-sizing: border-box; font-size: 1rem;
+        }
+
+        input:focus { border-color: var(--accent-blue); background-color: rgba(255, 255, 255, 0.08); }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-blue), #0056b3);
+            color: white; padding: 12px 28px; border: none; border-radius: 10px;
+            cursor: pointer; font-weight: 600; font-size: 1rem; transition: 0.3s;
+            width: 100%;
+        }
+
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(26, 115, 232, 0.4); }
+
+        /* Admin Link Styling */
+        .admin-link-container {
+            margin-top: 20px;
+            border-top: 1px solid var(--border-glass);
+            padding-top: 15px;
+        }
+
+        .nav-btn {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            transition: 0.3s;
+        }
+
+        .nav-btn:hover {
+            opacity: 1;
+            text-shadow: 0 0 10px var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop playsinline class="bg-video">
+        <source src="bg.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+
+    <div class="signup-container">
+        <h2>ProHire</h2>
+        <div class="form-content" id="formContent">
+            <div class="input-group stack-mode">
+                <input type="text" id="nameInput" placeholder="Enter your username" required>
+                <input type="email" id="emailInput" placeholder="Enter your email" required>
+                <button type="submit" id="nextBtn">Join</button>
+            </div>
+            
+            <div class="admin-link-container">
+                <a href="admin_login.html" class="nav-btn">🛠️ Admin Access</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const formContent = document.getElementById('formContent');
+        let tempUser = "";
+        let tempEmail = "";
+
+        function showPasswordForm(username, email) {
+            tempUser = username;
+            tempEmail = email;
+            formContent.classList.add('slide-out');
+            setTimeout(() => {
+                formContent.innerHTML = `
+                    <div class="input-group stack-mode">
+                        <input type="text" id="displayUser" value="${username}" disabled style="opacity: 0.6; cursor: not-allowed;">
+                        <input type="email" id="displayEmail" value="${email}" disabled style="opacity: 0.6; cursor: not-allowed;">
+                        <input type="password" id="passwordInput" placeholder="Choose a password" required autofocus>
+                        <button type="submit" id="finalSignupBtn">Create Account</button>
+                    </div>
+                `;
+                formContent.classList.remove('slide-out');
+                formContent.style.opacity = '0';
+                setTimeout(() => { formContent.style.opacity = '1'; }, 10);
+                document.getElementById('finalSignupBtn').addEventListener('click', handleRegistration);
+            }, 500);
+        }
+
+        async function handleRegistration(event) {
+            event.preventDefault();
+            const passwordInput = document.getElementById('passwordInput');
+            
+            if (passwordInput && passwordInput.value.length >= 6) {
+                try {
+                    // NEW: Connecting to your api.js login/signup route
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            username: tempUser, 
+                            email: tempEmail, 
+                            password: passwordInput.value 
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    // Even if database fails, we proceed with local login for your project flow
+                    console.log("--- Account Action ---");
+                    console.log("User:", tempUser);
+                    console.log("Status:", data.message || "Proceeding to Dashboard");
+                    console.log("---------------------------");
+
+                    localStorage.setItem('userName', tempUser);
+                    localStorage.setItem('hasSignedUp', 'true');
+                    window.location.href = 'job.html';
+
+                } catch (err) {
+                    console.log("Backend offline, using LocalStorage flow.");
+                    localStorage.setItem('userName', tempUser);
+                    window.location.href = 'job.html';
+                }
+            } else {
+                alert('Password must be at least 6 characters.');
+            }
+        }
+
+        document.getElementById('nextBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('nameInput');
+            const emailInput = document.getElementById('emailInput');
+            
+            if (nameInput.value.trim().length > 0 && emailInput.checkValidity()) {
+                showPasswordForm(nameInput.value.trim(), emailInput.value);
+            } else {
+                alert('Please enter a valid username and email.');
+            }
+        });
+    </script>
+</body>
+</html>
